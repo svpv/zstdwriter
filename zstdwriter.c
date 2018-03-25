@@ -73,6 +73,7 @@ static const char *xstrerror(int errnum)
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+#include <limits.h>
 #define ZSTD_STATIC_LINKING_ONLY
 #include <zstd.h>
 #include "zstdwriter.h"
@@ -141,9 +142,12 @@ bool zstdwriter_write(struct zstdwriter *zw, const void *buf, size_t size, const
     if (zw->error)
 	return ERRSTR("previous write failed"), false;
 
-    zw->contentSize += size;
-    if (zw->writeContentSize && zw->contentSize < size)
-	return ERRSTR("content size overflow"), false;
+    if (zw->writeContentSize) {
+	zw->contentSize += size;
+	if (size > UINT_MAX || zw->contentSize < size)
+	    return ERRSTR("content size overflow"),
+		   zw->error = true, false;
+    }
 
     ZSTD_inBuffer in = { buf, size, 0 };
     while (in.pos < in.size) {
