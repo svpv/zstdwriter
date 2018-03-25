@@ -18,8 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef ZSTDWRITER_H
-#define ZSTDWRITER_H
+#pragma once
 
 #ifdef __cplusplus
 extern "C" {
@@ -35,5 +34,4 @@ bool zstdwriter_close(struct zstdwriter *zw, const char *err[2]) __attribute__((
 
 #ifdef __cplusplus
 }
-#endif
 #endif
