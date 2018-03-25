@@ -89,17 +89,21 @@ struct zstdwriter {
     unsigned char zbuf[];
 };
 
-struct zstdwriter *zstdwriter_fdopen(int fd, int compressionLevel, int wlog, bool writeContentSize, bool writeChecksum, const char *err[2])
+struct zstdwriter *zstdwriter_fdopen(int fd, int compressionLevel, const char *err[2])
 {
-    ZSTD_parameters params = ZSTD_getParams(compressionLevel, 0, 0);
-    if (wlog)
-	params.cParams.windowLog = wlog;
-    params.fParams.checksumFlag = writeChecksum;
+    ZSTD_compressionParameters cParams = ZSTD_getCParams(compressionLevel, 0, 0);
+    return zstdwriter_fdopen_ex(fd, cParams, false, true, err);
+}
 
+struct zstdwriter *zstdwriter_fdopen_ex(int fd, ZSTD_compressionParameters cParams,
+	bool writeContentSize, bool writeChecksum, const char *err[2])
+{
     ZSTD_CStream *zcs = ZSTD_createCStream();
     if (!zcs)
 	return ERRSTR("ZSTD_createCStream failed"), NULL;
 
+    ZSTD_frameParameters fParams = { .checksumFlag = writeChecksum };
+    ZSTD_parameters params = { cParams, fParams };
     size_t zret = ZSTD_initCStream_advanced(zcs, NULL, 0, params, 0);
     if (ZSTD_isError(zret))
 	return ERRZSTD("ZSTD_initCStream_advanced", zret),

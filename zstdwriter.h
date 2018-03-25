@@ -26,9 +26,15 @@ extern "C" {
 #include <stdbool.h>
 #endif
 
-struct zstdwriter *zstdwriter_fdopen(int fd, int compressionLevel, int wlog,
-				     bool writeContentSize, bool writeChecksum,
+struct zstdwriter *zstdwriter_fdopen(int fd, int compressionLevel,
 				     const char *err[2]) __attribute__((nonnull));
+
+#ifdef ZSTD_H_ZSTD_STATIC_LINKING_ONLY
+struct zstdwriter *zstdwriter_fdopen_ex(int fd, ZSTD_compressionParameters cParams,
+					bool writeContentSize, bool writeChecksum,
+					const char *err[2]) __attribute__((nonnull));
+#endif
+
 bool zstdwriter_write(struct zstdwriter *zw, const void *buf, size_t size, const char *err[2]) __attribute__((nonnull));
 bool zstdwriter_close(struct zstdwriter *zw, const char *err[2]) __attribute__((nonnull));
 

@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#define ZSTD_STATIC_LINKING_ONLY
+#include <zstd.h>
 #include "zstdwriter.h"
 
 #define PROG "zstdwriter"
@@ -30,11 +32,14 @@ int main(int argc, char **argv)
 	    compressionLevel = atoi(&opt[1]);
     }
 
-    int wlog = 0;
-    bool writeContentSize = lseek(1, 0, SEEK_CUR) != -1;
-    bool writeChecksum = false;
+    struct zstdwriter *zw;
     const char *err[2];
-    struct zstdwriter *zw = zstdwriter_fdopen(1, compressionLevel, wlog, writeContentSize, writeChecksum, err);
+    if (lseek(1, 0, SEEK_CUR) == -1)
+	zw = zstdwriter_fdopen(1, compressionLevel, err);
+    else {
+	ZSTD_compressionParameters cParams = ZSTD_getCParams(compressionLevel, 0, 0);
+	zw = zstdwriter_fdopen_ex(1, cParams, true, true, err);
+    }
     if (!zw)
 	return error("zstdwriter_fdopen", err), 1;
 
